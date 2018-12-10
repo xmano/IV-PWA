@@ -9,9 +9,6 @@ import { SettingsPage } from '../pages/settings/settings';
 import { HomePage } from '../pages/home/home';
 import { TabsPage } from '../pages/tabs/tabs';
 
-import { StatusBar } from '@ionic-native/status-bar';
-import { SplashScreen } from '@ionic-native/splash-screen';
-
 import { LoginPage } from '../pages/login/login';
 import { User } from '../services/user';
 import { ComponentsModule } from '../components/components.module';
@@ -44,8 +41,6 @@ import { IdentityVaultInterceptor } from '../services/http-interceptor';
     LoginPage
   ],
   providers: [
-    StatusBar,
-    SplashScreen,
     {provide: ErrorHandler, useClass: IonicErrorHandler},
     User
   ]
