@@ -1,0 +1,20 @@
+biometrics-icon {
+  display: block;
+  width: 48px;
+  height: 48px;
+  background-size: 100%;
+  background-repeat: no-repeat;
+  background-color: transparent;
+  &.pin {
+    background-image: url('../assets/img/pin.png');
+  }  
+  &.fingerprint {
+    background-image: url('../assets/img/fingerprint.png');
+  }
+  &.touchid {
+    background-image: url('../assets/img/touchid.png');
+  }
+  &.faceid {
+    background-image: url('../assets/img/faceid.png');
+  }
+}

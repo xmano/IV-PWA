@@ -1,0 +1,191 @@
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+
+import { AuthMethod, IonicNativeAuthVaultConfig, IonicIdentityVaultUser } from '../lib';
+
+import { Events, Platform, App } from 'ionic-angular';
+
+// Uncomment the next line if using mocking in getPlugin()
+// import { IonicNativeAuthMock } from './auth-mock';
+
+@Injectable()
+export class User extends IonicIdentityVaultUser {
+  // The token for the user, used to make authenticated API requests
+  token: string;
+
+  // Metadata about the user, application-specific
+  userInfo: any;
+
+  // Token to test secure storage vault save / get operations
+  testToken: string;
+
+  //authMethod : BiometricOnly, PinFallback, PinOnly
+  constructor(public http: HttpClient, public platform: Platform, public app: App,
+              public events: Events) {
+    super(platform, <IonicNativeAuthVaultConfig> {
+      authMethod: AuthMethod.PinFallback,
+      // Whether to enable biometrics automatically when the user logs in
+      enableBiometrics: false,
+      // Lock the app if it is terminated and re-opened
+      lockOnClose: true,
+      // Lock the app after N milliseconds of inactivity
+      lockAfter: 1000 * 60 * 30, // 30 minutes
+      // Obscure the app when the app is backgrounded (most apps will want
+      // to set this to false unless sensitive financial data is being displayed)
+      hideScreenOnBackground: true
+    });
+    
+    //Initialize the testToken to a random value for verification.
+    //this.testToken = 'token1234567890-token1234567890';
+    
+    this.testToken = 'DhkKVeUhket6th_0FZ-AEkj9qFiC8gfftK9jRqhbQmlbTv13zU7CtqetsmAUJdaalNQaCnF-_d3QD9hK5ccZonv4-cMa1PBsoYZiuq968Z9IMMjQP_GSJB_xYG8LasFX3vMRBHrHC7QWiOvC_D4GTymysT2m2afBuThFAvbDeReyt6TxHsfJqQfK8nzlWL34InduKCw5eKqxqvx-4hAm_-p15gTFwaNjGrPyw5PgZK3VoXjrNFCpC4XLp71wPF_fZ';
+    
+    //while (this.testToken.length < 280) {
+    //  this.testToken += Math.random().toString(36);
+    //}
+  }
+
+  onVaultLocked(eventData: any) {
+    console.log('Vault locked');
+    // Clear our in-memory token
+    this.token = null;
+
+    let msg = (eventData.saved) ? 'Token saved.' : 'Token cleared.';
+    msg += (eventData.timeout) ? ' You are being securely timed out.' :
+         ' You are being securely logged off.';
+
+    alert(msg);
+    
+    // Vault locked due to inactivity
+    //this.clearSession();
+    this.events.publish('user:logout');
+  }
+
+  async onSessionRestored(token: string) {
+    this.token = token;
+  }
+
+  // Want to mock the native plugin? Just override getPlugin and provide
+  // a mocked version
+  // getPlugin() {
+  //   return IonicNativeAuthMock;
+  // }
+
+  /**
+   * User info contains metadata about the user from the server,
+   * such as their name, email, or any other important info.
+   */
+  getInfo() {
+    return this.userInfo;
+  }
+
+  /**
+   * Set metadata for this user
+   * @param info
+   */
+  setInfo(info: any) {
+    this.userInfo = info;
+  }
+
+  /**
+   * Return whether the user is logged in by the presence of
+   * a JWT token.
+   */
+  async isLoggedIn() {
+    return !!this.token
+  }
+
+  /**
+   * Perform a login request
+   * @param email
+   * @param password
+   */
+  async login(email: string, password: string) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        this.setInfo({
+          name: 'Max'
+        })
+        this.saveSession(email, this.testToken);
+        resolve(this.testToken);
+      }, 1000);
+    })
+  }
+
+  /**
+   * Perform a signup request
+   * @param data
+   */
+  async signup(data: any) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        this.setInfo({
+          name: 'Max'
+        })
+        this.saveSession(data.email, this.testToken);
+        resolve(this.testToken);
+      }, 1000);
+    });
+  }
+
+  /**
+   * Get user info from the server. Also doubles
+   * as a way to check if a token is still fresh
+   */
+  async getUser() {
+
+    // Perform a server request to get the user information
+    // This request pulls in a JSON with {name: 'Max'}
+    // If you're using IdentityVaultInterceptor, the token header will get added automatically for you
+    // const userInfoResult = await this.http.get('https://api.myjson.com/bins/7xoye', { observe: 'response' }).toPromise();
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const user = {
+          name: 'Max'
+        }
+
+        // Save the user info
+        this.setInfo(user);
+
+        resolve(user);
+      }, 1000);
+    });
+
+  }
+
+  async checkToken() {
+    // Check the token and get user info
+    try {
+      await this.getUser();
+    } catch {
+      // Token is invalid, clear the vault and return null
+      const vault = await this.getVault();
+      vault.clear();
+      return null;
+    }
+    //Verify the token..
+    if (this.testToken != this.token) {
+      console.log("#Err: token mismatch - please check native auth");
+    }
+    return this.token;
+  }
+
+  /**
+   * Log the user out entirely, and forget any stored
+   * authentication tokens
+   */
+  async logout() {
+    const vault = await this.getVault();
+    return vault.clear();
+  }
+
+  /**
+   * Lock the user out without clearing their secure session
+   * information from the vault
+   */
+  async lockOut() {
+    const vault = await this.getVault();
+    return vault.lock();
+  }
+}

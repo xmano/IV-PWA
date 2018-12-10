@@ -1,0 +1,19 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>
+      Settings
+    </ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-list-header>Settings</ion-list-header>
+    <ion-item *ngIf="_biometricType">
+      <ion-label>Enable {{getBiometricType()}}</ion-label>
+      <ion-toggle checked="false" name="enableBiometrics" [(ngModel)]="enableBiometrics" (ngModelChange)="onEnableBiometricsChange($event)"></ion-toggle>
+    </ion-item>
+  </ion-list>
+  <button (click)="onLogout()" ion-button>Log out</button>
+  <button (click)="onLock()" ion-button>Lock</button>
+</ion-content>
