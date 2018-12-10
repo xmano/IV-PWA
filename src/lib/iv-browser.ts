@@ -75,7 +75,7 @@ export class IonicIdentityVaultBrowser implements IonicNativeAuthPlugin {
                 //Call the lock handler here..
                 config.onLock && config.onLock(event);
               }, 500)
-              resolve(true);
+              resolve(null);
             });
           },
           getBiometricType: function() {
