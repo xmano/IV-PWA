@@ -11,6 +11,7 @@ export class HomePage {
   storedUsername: string;
 
   constructor(public navCtrl: NavController, public plt: Platform, public user: User) {
+
   }
 
   async ionViewDidEnter() {

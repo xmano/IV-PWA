@@ -15,19 +15,18 @@ export class IonicIdentityVaultUser {
 
   _isReady = false;
 
-  _isWeb = false;
-
   constructor(public platform: { ready: () => Promise<any> }, 
               private vaultConfig: IonicNativeAuthVaultConfig) {
     // Store the promise returned from loading the vault. Once the vault is ready,
     // any cached credentials, such as a JWT token that is not locked, will
     // be loaded.
     this._readyPromise = this.getVault().then(this.restoreSession.bind(this));
-    //this._isWeb = vaultConfig.isWeb;
 
     //vIonicNativeAuth = IonicNativeAuth;
   }
 
+  
+  
   // Will be overridden by children
   /**
    * Called when the vault has been locked
@@ -40,11 +39,15 @@ export class IonicIdentityVaultUser {
    * @param token
    */
   onSessionRestored(_token: any) {}
+  
+  
+  onCookieAccess(value: string): string { return "";}
 
   getPlugin(): IonicNativeAuthPlugin {
     if (vIonicNativeAuth == null) {
       //instantiate a new object of IonicNativeBrowser & return it
-      vIonicNativeAuth = new IonicIdentityVaultBrowser();
+      vIonicNativeAuth = (this.vaultConfig.pwaMode) ? 
+                          new IonicIdentityVaultBrowser() : IonicNativeAuth;
     }
     return vIonicNativeAuth;
   }
@@ -93,6 +96,9 @@ export class IonicIdentityVaultUser {
       ...this.vaultConfig,
       onLock: (eventData: any) => {
         this.onVaultLocked(eventData);
+      },
+      accessCookie: (value: string) => {
+        return this.onCookieAccess(value);
       }
     });
 

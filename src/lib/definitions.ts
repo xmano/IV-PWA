@@ -56,6 +56,7 @@ export interface IonicNativeAuthResetPasswordConfig {
 }
 
 export interface IonicNativeAuthVaultConfig {
+  pwaMode?:boolean,
   authMethod?: AuthMethod;
   lockOnClose? : boolean;
   lockAfter?: number;
@@ -63,6 +64,7 @@ export interface IonicNativeAuthVaultConfig {
   enableBiometrics?: boolean;
   onLock?(data: any): void;
   onLogout?(): void;
+  accessCookie?(value:string): string;
 }
 
 export interface IonicNativeAuthVaultService {

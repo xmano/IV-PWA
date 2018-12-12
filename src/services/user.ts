@@ -1,15 +1,21 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID, InjectionToken  } from '@angular/core';
 
 import { AuthMethod, IonicNativeAuthVaultConfig, IonicIdentityVaultUser } from '../lib';
 
 import { Events, Platform, App } from 'ionic-angular';
+import { DOCUMENT, isPlatformBrowser  } from '@angular/common';
 
 // Uncomment the next line if using mocking in getPlugin()
 // import { IonicNativeAuthMock } from './auth-mock';
 
+const isPWA = true;
+const lockTime = 1000 * 10; //10 seconds
+
 @Injectable()
 export class User extends IonicIdentityVaultUser {
+  private readonly documentIsAccessible: boolean;
+  
   // The token for the user, used to make authenticated API requests
   token: string;
 
@@ -18,10 +24,13 @@ export class User extends IonicIdentityVaultUser {
 
   // Token to test secure storage vault save / get operations
   testToken: string;
+  
+  logTimer: any = null
 
   //authMethod : BiometricOnly, PinFallback, PinOnly
   constructor(public http: HttpClient, public platform: Platform, public app: App,
-              public events: Events) {
+              public events: Events, @Inject(DOCUMENT) private ckdoc: any,
+              @Inject( PLATFORM_ID ) private platformId: InjectionToken<Object>) {
     super(platform, <IonicNativeAuthVaultConfig> {
       authMethod: AuthMethod.PinFallback,
       // Whether to enable biometrics automatically when the user logs in
@@ -29,10 +38,13 @@ export class User extends IonicIdentityVaultUser {
       // Lock the app if it is terminated and re-opened
       lockOnClose: true,
       // Lock the app after N milliseconds of inactivity
-      lockAfter: 1000 * 60 * 30, // 30 minutes
+      lockAfter: lockTime, // 30 minutes
       // Obscure the app when the app is backgrounded (most apps will want
       // to set this to false unless sensitive financial data is being displayed)
-      hideScreenOnBackground: true
+      hideScreenOnBackground: true,
+      
+      pwaMode: isPWA
+      
     });
     
     //Initialize the testToken to a random value for verification.
@@ -43,6 +55,22 @@ export class User extends IonicIdentityVaultUser {
     //while (this.testToken.length < 280) {
     //  this.testToken += Math.random().toString(36);
     //}
+    
+    this.documentIsAccessible = isPlatformBrowser( this.platformId );
+    
+  }
+  
+  onCookieAccess(value: string): string {
+    if ( !this.documentIsAccessible ) {
+      return "";
+    }
+    
+    if (value != "") {
+      this.ckdoc.cookie = "username=" + encodeURIComponent(value);
+    }
+    
+    let v = decodeURIComponent(this.ckdoc.cookie);
+    return v;
   }
 
   onVaultLocked(eventData: any) {
@@ -94,20 +122,48 @@ export class User extends IonicIdentityVaultUser {
   async isLoggedIn() {
     return !!this.token
   }
+  
+  getCookie(key: string): string {
+      key += '=';
+      //let store = this.ckdoc.cookie;
+      let store = decodeURIComponent(this.ckdoc.cookie);;
+      let ck = store.split(/;\s*/);
+      for(let i = ck.length - 1; i >= 0; i--) {
+        if (!ck[i].indexOf(key))
+            return ck[i].replace(key, '');
+      }
+    return "";
+  }
 
+  //Experimental --
+  //TODO : clean up!  
+  saveToken(email: string, token: string) {
+    //TODO: Cookie saved here:
+    //const value = email + ';' + "token=" + token + ';' ;
+    /*    + expires=" + (new Date(new Date().getTime() + lockTime )).toUTCString() + ';'; */
+    
+    //this.ckdoc.cookie = "username=" + encodeURIComponent(value);  
+
+    //let w = this.getCookie("token");
+    //console.log(w);
+  }
+  
+  
   /**
    * Perform a login request
    * @param email
    * @param password
    */
   async login(email: string, password: string) {
-    return new Promise((resolve) => {
+    var token = this.testToken;
+    return new Promise<string>((resolve) => {
       setTimeout(() => {
         this.setInfo({
           name: 'Max'
         })
-        this.saveSession(email, this.testToken);
-        resolve(this.testToken);
+        this.saveSession(email, token);
+
+        resolve(token);
       }, 1000);
     })
   }
@@ -187,5 +243,23 @@ export class User extends IonicIdentityVaultUser {
   async lockOut() {
     const vault = await this.getVault();
     return vault.lock();
+  }
+  
+  /**
+   * LogoutTimer / cancelLogout has been added for PWA mode.
+   */  
+  logoutTimer() { 
+    this.logTimer = setTimeout(() => {
+      alert("LoggingOut");
+      this.logout();
+    }, lockTime);
+  }
+
+  cancelLogout() {
+    clearTimeout( this.logTimer);
+  }
+  
+  isPWA() {
+    return isPWA;
   }
 }
