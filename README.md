@@ -12,4 +12,4 @@ Experimental Prototype Code!
 3. Code for iv plugin is inside src/lib. This will be refactored to a separate lib later.
 
 # PWA
-Refer ([Readme](https://github.com/xmano/IV-PWA/PWA-Readme.md)
+Refer ([Readme](https://github.com/xmano/IV-PWA/blob/master/README.md))
