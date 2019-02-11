@@ -13,3 +13,10 @@ Experimental Prototype Code!
 
 # PWA
 Refer [Readme](PWA-Readme.md)
+
+
+# References
+
+https://ionicthemes.com/tutorials/about/the-complete-guide-to-progressive-web-apps-with-ionic4
+
+https://ionicframework.com/docs/publishing/progressive-web-app
